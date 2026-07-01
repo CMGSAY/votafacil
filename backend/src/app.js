@@ -10,15 +10,27 @@ const app = express();
 // Configuracion de seguridad HTTP
 app.use(helmet());
 
-// Configuracion de CORS actualizada con arreglo de origenes
-// Esto permite que el backend acepte peticiones tanto de tu entorno local
-// como directamente desde Vercel, solucionando el bloqueo.
+// Configuracion de CORS dinamica
+// Esto permite que el backend acepte peticiones tanto de tu entorno local (cualquier puerto)
+// como de cualquier despliegue en Vercel (*.vercel.app), solucionando el bloqueo de forma definitiva.
 const corsOptions = {
-    origin: [
-        'http://localhost:5500',
-        'https://votafacil-plum.vercel.app', 
-        process.env.FRONTEND_URL
-    ].filter(Boolean), // Esta pequeña función evita errores si la variable es nula
+    origin: function (origin, callback) {
+        // Permitir peticiones sin origen (como mobile apps, curl o Postman)
+        if (!origin) return callback(null, true);
+        
+        // Expresiones regulares para validar orígenes permitidos
+        const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+        const isVercel = /\.vercel\.app$/.test(origin);
+        
+        // Tambien permitir si coincide exactamente con la variable de entorno FRONTEND_URL
+        const isAllowedEnv = process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL;
+
+        if (isLocalhost || isVercel || isAllowedEnv) {
+            callback(null, true);
+        } else {
+            callback(new Error('Bloqueado por CORS: Origen no permitido'));
+        }
+    },
     credentials: true,
     optionsSuccessStatus: 200
 };

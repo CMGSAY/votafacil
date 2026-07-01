@@ -1,6 +1,6 @@
 // backend/src/controllers/auth.controller.js
 const pool = require('../config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Registro de usuario

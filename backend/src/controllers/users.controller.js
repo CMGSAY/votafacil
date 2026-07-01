@@ -1,6 +1,6 @@
 // backend/src/controllers/users.controller.js
 const pool = require('../config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Obtener perfil de usuario
 // GET /api/users/:id
