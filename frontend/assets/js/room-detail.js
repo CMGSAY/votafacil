@@ -160,6 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="status-badge status-${poll.estado}">${estadoTexto}</span>
                         <span class="type-badge">${tipoVotoTexto}</span>
                         <span class="type-badge">${poll.visibilidad === 'publica' ? 'Voto Público' : 'Voto Secreto'}</span>
+                        <span class="type-badge" style="background-color: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2); color: #a5b4fc;">
+                            Votos: ${poll.total_votos || 0}
+                        </span>
                     </div>
                     <h3 class="poll-title">${escapeHTML(poll.titulo)}</h3>
                     <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0;">${escapeHTML(poll.descripcion || 'Sin descripción.')}</p>

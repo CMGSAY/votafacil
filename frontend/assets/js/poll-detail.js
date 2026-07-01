@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentPoll = null;
     let userHasVoted = false;
+    const currentUser = window.API.getCurrentUser();
 
     // Cargar la votacion y sus opciones (Fase 13.4)
     const loadPollDetails = async () => {
@@ -42,10 +43,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.success) {
                 currentPoll = response.poll;
                 userHasVoted = response.hasVoted;
+                const totalVotos = response.totalVotos || 0;
 
                 pollContent.style.display = 'block';
-                renderPollInfo(currentPoll, userHasVoted);
-                renderOptions(currentPoll, userHasVoted);
+                renderPollInfo(currentPoll, userHasVoted, totalVotos);
+                
+                // Determinar si debemos mostrar los resultados directamente en lugar de las opciones
+                const isClosed = currentPoll.estado === 'cerrada';
+                const canSeeResults = isClosed || currentPoll.mostrar_resultados === 'tiempo_real';
+                const hasVotedAndCannotChange = userHasVoted && !currentPoll.permitir_cambio_voto;
+                const isCreatorOrAdmin = currentPoll.creador_id && currentUser && (parseInt(currentPoll.creador_id, 10) === parseInt(currentUser.id, 10) || currentUser.rol === 'administrador');
+
+                if (canSeeResults && (hasVotedAndCannotChange || isClosed || isCreatorOrAdmin)) {
+                    loadAndRenderResultsInline();
+                } else {
+                    renderOptions(currentPoll, userHasVoted);
+                }
             } else {
                 alertContainer.innerHTML = `
                     <div class="alert alert-danger">
@@ -63,12 +76,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Cargar y mostrar resultados directamente en el contenedor de opciones (Twitter-style)
+    const loadAndRenderResultsInline = async () => {
+        try {
+            const response = await window.API.get(`/polls/${pollId}/results`);
+            if (response.success && !response.resultsHidden) {
+                // Ocultar formulario o deshabilitar botón de votar si ya no puede votar
+                if (currentPoll.estado === 'cerrada' || (userHasVoted && !currentPoll.permitir_cambio_voto)) {
+                    submitVoteBtn.style.display = 'none';
+                }
+                
+                optionsContainer.innerHTML = '';
+                
+                response.results.resultados.forEach(res => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.style.marginBottom = '1.2rem';
+                    item.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.95rem;">
+                            <span>${escapeHTML(res.texto_opcion)}</span>
+                            <span><strong>${res.votos} votos</strong> (${res.porcentaje}%)</span>
+                        </div>
+                        <div class="progress-bar-bg" style="height: 10px; background-color: rgba(255, 255, 255, 0.05); border-radius: 5px; overflow: hidden; border: 1px solid var(--border-color);">
+                            <div class="progress-bar-fill" id="fill-opt-${res.opcion_id}" style="height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 5px; width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+                        </div>
+                    `;
+                    optionsContainer.appendChild(item);
+
+                    // Animar la barra
+                    setTimeout(() => {
+                        const fillElement = document.getElementById(`fill-opt-${res.opcion_id}`);
+                        if (fillElement) {
+                            fillElement.style.width = `${res.porcentaje}%`;
+                        }
+                    }, 50);
+                });
+            } else {
+                renderOptions(currentPoll, userHasVoted);
+            }
+        } catch (error) {
+            console.error('Error al cargar resultados en línea:', error);
+            renderOptions(currentPoll, userHasVoted);
+        }
+    };
+
     // Renderizar informacion general
-    const renderPollInfo = (poll, hasVoted) => {
+    const renderPollInfo = (poll, hasVoted, totalVotos) => {
         pollTitle.innerText = poll.titulo;
         pollDescription.innerText = poll.descripcion || 'Sin descripción o instrucciones adicionales.';
         pollCreator.innerText = poll.creador_nombre || 'Desconocido';
         backBtn.href = `/pages/room-detail?id=${poll.sala_id}`;
+
+        // Mostrar total de votos
+        const votersCountEl = document.getElementById('poll-voters-count');
+        if (votersCountEl) {
+            votersCountEl.innerText = totalVotos;
+        }
 
         // Cierre
         if (poll.termina_en) {
@@ -106,8 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const isClosed = poll.estado === 'cerrada';
         const isBorrador = poll.estado === 'borrador';
         
-        // Boton resultados visible si ya cerro, si el creador lo solicita, o si ya voto y la config permite ver en tiempo real
-        const resultsVisible = isClosed || poll.mostrar_resultados === 'tiempo_real';
+        const isCreator = poll.creador_id && currentUser && parseInt(poll.creador_id, 10) === parseInt(currentUser.id, 10);
+        const isAdmin = currentUser && currentUser.rol === 'administrador';
+
+        // Boton resultados visible si ya cerro, si el creador o admin lo solicita, o si la config permite ver en tiempo real
+        const resultsVisible = isClosed || poll.mostrar_resultados === 'tiempo_real' || isCreator || isAdmin;
         if (resultsVisible) {
             viewResultsBtn.href = `/pages/results?id=${poll.id}`;
             viewResultsBtn.style.display = 'inline-flex';

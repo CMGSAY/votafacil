@@ -138,10 +138,18 @@ const getPollById = async (req, res) => {
 
         const hasVoted = await votesService.checkHasVoted(id, userId);
 
+        // Obtener cantidad de personas que han votado
+        const [voterCountRows] = await pool.query(
+            'SELECT COUNT(id) AS count FROM participantes_votacion WHERE votacion_id = ?',
+            [id]
+        );
+        const totalVotos = voterCountRows[0].count;
+
         res.status(200).json({
             success: true,
             poll,
-            hasVoted
+            hasVoted,
+            totalVotos
         });
     } catch (error) {
         console.error('Error al obtener votacion:', error);

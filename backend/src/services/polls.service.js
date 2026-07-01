@@ -211,10 +211,13 @@ const getPollsByRoom = async (salaId) => {
     const query = `
         SELECT v.id, v.sala_id, v.creador_id, v.titulo, v.descripcion, v.tipo_voto, v.visibilidad,
                v.mostrar_resultados, v.estado, v.inicia_en, v.termina_en, v.cierre_automatico, v.creado_en,
-               u.nombre_usuario AS creador_nombre
+               u.nombre_usuario AS creador_nombre,
+               COUNT(p.id) AS total_votos
         FROM votaciones v
         JOIN usuarios u ON v.creador_id = u.id
+        LEFT JOIN participantes_votacion p ON v.id = p.votacion_id
         WHERE v.sala_id = ?
+        GROUP BY v.id, u.nombre_usuario
         ORDER BY v.creado_en DESC
     `;
     const [rows] = await pool.query(query, [salaId]);
