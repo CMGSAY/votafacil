@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # VotaFácil - Plataforma Web de Votaciones Modernas
 
 VotaFácil es una aplicación web Full Stack (desacoplada) que permite a cualquier usuario registrado crear salas públicas o privadas, configurar votaciones con múltiples tipos de respuestas (selección única, múltiple, Sí/No, escala de calificación) y ver resultados en tiempo real o diferidos, todo con una interfaz moderna y segura.
@@ -123,3 +124,7 @@ El código ha sido estructurado desde el primer momento con comentarios específ
 3. Sube los cambios a GitHub.
 4. Entra a Vercel, crea un nuevo proyecto, asocia el repositorio de GitHub y selecciona la carpeta `frontend/` para el despliegue.
 5. Vercel detectará el archivo `index.html` en la raíz del frontend y desplegará de forma automática el sitio estático.
+=======
+# votafacil
+Pagina web para votar por cosas importantes o solo para ponernos deacuerdo sobre algo
+>>>>>>> 0ff7f54272f341c00823fcb6e90b5df42c5bf42a
