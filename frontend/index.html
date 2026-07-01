@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VotaFácil — Plataforma Web de Votaciones Modernas</title>
+    <meta name="description" content="Crea, administra y participa en votaciones y encuestas en tiempo real de forma segura, rápida y gratuita.">
+    <link rel="stylesheet" href="/assets/css/global.css">
+    <style>
+        /* Estilos específicos para la landing page */
+        .hero {
+            text-align: center;
+            padding: 5rem 1rem 6rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 1.5rem;
+            max-width: 800px;
+            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 70%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .feature-card {
+            background-color: var(--bg-secondary);
+            text-align: left;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            background: rgba(99, 102, 241, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="/index.html" class="logo" id="logo-link">VotaFácil</a>
+            <ul class="nav-menu">
+                <li><a href="/pages/rooms.html" class="nav-link" id="nav-rooms">Salas</a></li>
+                <li class="auth-required" style="display: none;"><a href="/pages/profile.html" class="nav-link" id="nav-profile">Mi Perfil</a></li>
+                <li class="guest-only"><a href="/pages/login.html" class="btn btn-secondary" id="nav-login">Iniciar Sesión</a></li>
+                <li class="guest-only"><a href="/pages/register.html" class="btn btn-primary" id="nav-register">Registrarse</a></li>
+                <li class="auth-required" style="display: none;"><button onclick="handleLogout()" class="btn btn-secondary" id="nav-logout">Cerrar Sesión</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1 class="hero-title">Votaciones seguras y transparentes al instante</h1>
+            <p class="hero-subtitle">Organiza elecciones, encuestas y toma de decisiones en equipo de manera profesional. Configura salas públicas o privadas en segundos.</p>
+            <div class="hero-actions">
+                <a href="/pages/rooms.html" class="btn btn-primary btn-lg" id="hero-action-primary">Comenzar a Votar</a>
+                <a href="/pages/register.html" class="btn btn-secondary btn-lg guest-only" id="hero-action-secondary">Crear una Cuenta</a>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="card feature-card">
+                <div class="feature-icon">S</div>
+                <h3 class="feature-title">Salas Públicas y Privadas</h3>
+                <p class="feature-desc">Crea espacios compartidos accesibles para todos o salas privadas protegidas por código de acceso.</p>
+            </div>
+            <div class="card feature-card">
+                <div class="feature-icon">T</div>
+                <h3 class="feature-title">Múltiples Formatos</h3>
+                <p class="feature-desc">Elige entre respuesta única, múltiple, calificaciones de escala numérica o preguntas de Sí / No.</p>
+            </div>
+            <div class="card feature-card">
+                <div class="feature-icon">R</div>
+                <h3 class="feature-title">Resultados Claros</h3>
+                <p class="feature-desc">Visualiza porcentajes de votos y niveles de participación con gráficos y barras en tiempo real o diferidos.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 VotaFácil. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Cargar archivo API base -->
+    <script src="/assets/js/api.js"></script>
+    <script>
+        // Actualizar barra de navegacion segun estado de sesion
+        document.addEventListener('DOMContentLoaded', () => {
+            const isAuth = window.API.isAuthenticated();
+            const guestElements = document.querySelectorAll('.guest-only');
+            const authElements = document.querySelectorAll('.auth-required');
+
+            if (isAuth) {
+                guestElements.forEach(el => el.style.display = 'none');
+                authElements.forEach(el => el.style.display = 'block');
+            } else {
+                guestElements.forEach(el => el.style.display = 'block');
+                authElements.forEach(el => el.style.display = 'none');
+            }
+        });
+
+        // Manejar cierre de sesion
+        async function handleLogout() {
+            try {
+                // Notificar al backend de forma opcional (sin estado)
+                await window.API.post('/auth/logout');
+            } catch (e) {
+                console.error(e);
+            }
+            window.API.logoutLocal();
+        }
+    </script>
+</body>
+</html>

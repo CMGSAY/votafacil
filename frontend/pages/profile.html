@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil — VotaFácil</title>
+    <link rel="stylesheet" href="/assets/css/global.css">
+    <style>
+        .profile-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        .profile-card {
+            text-align: center;
+        }
+        .avatar-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: rgba(99, 102, 241, 0.1);
+            border: 2px solid var(--primary);
+            margin: 0 auto 1.5rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 3rem;
+            font-weight: 700;
+            object-fit: cover;
+        }
+        .stats-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .stat-box {
+            flex: 1;
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        /* Historial */
+        .history-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .history-list {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .history-item {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+            transition: var(--transition-smooth);
+        }
+        .history-item:hover {
+            border-color: rgba(99, 102, 241, 0.2);
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        .history-info {
+            flex-grow: 1;
+        }
+        .history-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .history-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition-smooth);
+        }
+        .tab-btn.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--primary);
+        }
+        .tabs-header {
+            display: flex;
+            gap: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+        @media (max-width: 900px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="/index.html" class="logo">VotaFácil</a>
+            <ul class="nav-menu">
+                <li><a href="/pages/rooms.html" class="nav-link">Salas</a></li>
+                <li class="auth-required" style="display: none;"><a href="/pages/profile.html" class="nav-link nav-active">Mi Perfil</a></li>
+                <li class="guest-only"><a href="/pages/login.html" class="btn btn-secondary">Iniciar Sesión</a></li>
+                <li class="guest-only"><a href="/pages/register.html" class="btn btn-primary">Registrarse</a></li>
+                <li class="auth-required" style="display: none;"><button onclick="handleLogout()" class="btn btn-secondary">Cerrar Sesión</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+        <div class="profile-container">
+            <!-- Columna Izquierda: Información de Perfil -->
+            <div class="card profile-card">
+                <div id="avatar-container" class="avatar-img">U</div>
+                <h2 id="profile-display-name" style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem;">Cargando...</h2>
+                <p id="profile-display-role" style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.5rem;">Cargando...</p>
+                
+                <div id="profile-alert"></div>
+
+                <form id="profile-form" style="text-align: left;">
+                    <div class="form-group">
+                        <label for="username" class="form-label">Nombre de Usuario</label>
+                        <input type="text" id="username" class="form-control" required minlength="3">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" id="email" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="avatar-url" class="form-label">URL de Avatar (Opcional)</label>
+                        <input type="url" id="avatar-url" class="form-control" placeholder="https://ejemplo.com/avatar.png">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label">Nueva Contraseña (Opcional)</label>
+                        <input type="password" id="password" class="form-control" placeholder="Dejar vacío para mantener actual" minlength="6">
+                    </div>
+
+                    <button type="submit" id="submit-profile-btn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 1rem;">Guardar Perfil</button>
+                </form>
+            </div>
+
+            <!-- Columna Derecha: Estadísticas e Historial -->
+            <div class="history-section">
+                <!-- Estadísticas (Fase 15.4) -->
+                <div class="stats-row">
+                    <div class="card stat-box">
+                        <div id="stat-created" class="stat-number">0</div>
+                        <div class="stat-label">Votaciones Creadas</div>
+                    </div>
+                    <div class="card stat-box">
+                        <div id="stat-voted" class="stat-number">0</div>
+                        <div class="stat-label">Participaciones</div>
+                    </div>
+                </div>
+
+                <!-- Pestañas de Historial (Fase 15.3) -->
+                <div class="card" style="padding: 2rem;">
+                    <div class="tabs-header">
+                        <button id="tab-created-btn" class="tab-btn active">Votaciones Creadas</button>
+                        <button id="tab-voted-btn" class="tab-btn">Mis Votos</button>
+                    </div>
+
+                    <div id="history-container">
+                        <div class="history-list" id="history-list">
+                            <div style="text-align: center; color: var(--text-secondary); padding: 2rem;">Cargando historial...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 VotaFácil. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/profile.js"></script>
+    <script>
+        // Manejar navbar
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.API.isAuthenticated()) {
+                window.location.href = '/pages/login.html';
+                return;
+            }
+
+            const guestElements = document.querySelectorAll('.guest-only');
+            const authElements = document.querySelectorAll('.auth-required');
+            guestElements.forEach(el => el.style.display = 'none');
+            authElements.forEach(el => el.style.display = 'block');
+        });
+
+        async function handleLogout() {
+            try {
+                await window.API.post('/auth/logout');
+            } catch (e) {}
+            window.API.logoutLocal();
+        }
+    </script>
+</body>
+</html>

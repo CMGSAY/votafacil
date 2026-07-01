@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de Votación — VotaFácil</title>
+    <link rel="stylesheet" href="/assets/css/global.css">
+    <style>
+        .results-container {
+            max-width: 700px;
+            margin: 2rem auto;
+        }
+        .results-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+        .results-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .badge-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        /* Barras de progreso de resultados */
+        .result-item {
+            margin-bottom: 1.5rem;
+        }
+        .result-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .progress-bar-bg {
+            height: 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            overflow: hidden;
+            width: 100%;
+            border: 1px solid var(--border-color);
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 6px;
+            width: 0%;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .results-summary {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1.2rem;
+            margin-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+        /* Tabla de votos publicos */
+        .public-votes-section {
+            margin-top: 3rem;
+        }
+        .public-votes-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        .votes-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .votes-table th, .votes-table td {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .votes-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        .votes-table tr:hover td {
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .status-borrador { background-color: rgba(107, 114, 128, 0.15); color: var(--text-secondary); }
+        .status-activa { background-color: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .status-cerrada { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .type-badge {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="/index.html" class="logo">VotaFácil</a>
+            <ul class="nav-menu">
+                <li><a href="/pages/rooms.html" class="nav-link">Salas</a></li>
+                <li class="auth-required" style="display: none;"><a href="/pages/profile.html" class="nav-link">Mi Perfil</a></li>
+                <li class="guest-only"><a href="/pages/login.html" class="btn btn-secondary">Iniciar Sesión</a></li>
+                <li class="guest-only"><a href="/pages/register.html" class="btn btn-primary">Registrarse</a></li>
+                <li class="auth-required" style="display: none;"><button onclick="handleLogout()" class="btn btn-secondary">Cerrar Sesión</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+        <div class="card results-container">
+            <div id="alert-container"></div>
+
+            <div id="results-content" style="display: none;">
+                <!-- Detalles de la votación -->
+                <div class="results-header">
+                    <div class="badge-row">
+                        <span id="poll-status" class="status-badge"></span>
+                        <span id="poll-type" class="type-badge"></span>
+                        <span id="poll-visibility" class="type-badge"></span>
+                    </div>
+                    <h1 class="results-title" id="poll-title">Cargando resultados...</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                        Creada por: <strong id="poll-creator">...</strong>
+                    </p>
+                    <p id="poll-description" style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 0;"></p>
+                </div>
+
+                <!-- Mensaje para resultados ocultos (Fase 14.4) -->
+                <div id="results-hidden-card" style="display: none; text-align: center; padding: 3rem 1rem;">
+                    <div class="alert alert-info" id="results-hidden-message" style="display: inline-flex;"></div>
+                    <p style="color: var(--text-secondary); margin-top: 1.5rem;">Esta votación está configurada para revelar resultados únicamente al finalizar.</p>
+                </div>
+
+                <!-- Visualizador de resultados principales (Fase 14.2) -->
+                <div id="results-visualizer" style="display: none;">
+                    <div id="options-results-list">
+                        <!-- Items de opciones y barras cargados por JS -->
+                    </div>
+
+                    <!-- Resumen de participacion (Fase 14.3) -->
+                    <div class="results-summary">
+                        <span>Total de Votantes: <strong id="total-voters">0</strong></span>
+                        <span id="participation-rate"></span>
+                    </div>
+
+                    <!-- Tabla de votos públicos (Fase 14.5) -->
+                    <div class="public-votes-section" id="public-votes-section" style="display: none;">
+                        <h3 class="public-votes-title">Detalle de Votación Pública</h3>
+                        <table class="votes-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Opción Seleccionada</th>
+                                </tr>
+                            </thead>
+                            <tbody id="public-votes-list">
+                                <!-- Filas de usuarios y votos cargados por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <a href="#" id="back-btn" class="btn btn-secondary">Volver a la Votación</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 VotaFácil. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/results.js"></script>
+    <script>
+        // Manejar navbar
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.API.isAuthenticated()) {
+                window.location.href = '/pages/login.html';
+                return;
+            }
+
+            const guestElements = document.querySelectorAll('.guest-only');
+            const authElements = document.querySelectorAll('.auth-required');
+            guestElements.forEach(el => el.style.display = 'none');
+            authElements.forEach(el => el.style.display = 'block');
+        });
+
+        async function handleLogout() {
+            try {
+                await window.API.post('/auth/logout');
+            } catch (e) {}
+            window.API.logoutLocal();
+        }
+    </script>
+</body>
+</html>

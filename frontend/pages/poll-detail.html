@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Participar en Votación — VotaFácil</title>
+    <link rel="stylesheet" href="/assets/css/global.css">
+    <style>
+        .poll-container {
+            max-width: 650px;
+            margin: 2rem auto;
+        }
+        .poll-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+        .poll-badge-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .poll-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 1.2rem 1.5rem;
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-weight: 500;
+            gap: 1rem;
+        }
+        .option-label:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        /* Cuando el input está seleccionado */
+        .option-label.selected {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+        }
+        .option-input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+        .action-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .status-borrador { background-color: rgba(107, 114, 128, 0.15); color: var(--text-secondary); }
+        .status-activa { background-color: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .status-cerrada { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .type-badge {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="/index.html" class="logo">VotaFácil</a>
+            <ul class="nav-menu">
+                <li><a href="/pages/rooms.html" class="nav-link">Salas</a></li>
+                <li class="auth-required" style="display: none;"><a href="/pages/profile.html" class="nav-link">Mi Perfil</a></li>
+                <li class="guest-only"><a href="/pages/login.html" class="btn btn-secondary">Iniciar Sesión</a></li>
+                <li class="guest-only"><a href="/pages/register.html" class="btn btn-primary">Registrarse</a></li>
+                <li class="auth-required" style="display: none;"><button onclick="handleLogout()" class="btn btn-secondary">Cerrar Sesión</button></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+        <div class="card poll-container">
+            <div id="alert-container"></div>
+
+            <div id="poll-content" style="display: none;">
+                <div class="poll-header">
+                    <div class="poll-badge-row">
+                        <span id="poll-status" class="status-badge"></span>
+                        <span id="poll-type" class="type-badge"></span>
+                        <span id="poll-visibility" class="type-badge"></span>
+                    </div>
+                    <h1 class="poll-title" id="poll-title">Cargando votación...</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                        Creada por: <strong id="poll-creator">...</strong> | Cierre: <span id="poll-end-date">...</span>
+                    </p>
+                    <p id="poll-description" style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 0;"></p>
+                </div>
+
+                <div id="has-voted-alert" style="display: none;" class="alert alert-info">
+                    Ya has participado en esta votación. Tu voto está registrado.
+                </div>
+
+                <form id="vote-form">
+                    <div class="options-container" id="options-container">
+                        <!-- Opciones cargadas por JS -->
+                    </div>
+
+                    <div class="action-row">
+                        <a href="#" id="back-btn" class="btn btn-secondary">Volver a la Sala</a>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <a href="#" id="view-results-btn" class="btn btn-secondary" style="display: none;">Ver Resultados</a>
+                            <button type="submit" id="submit-vote-btn" class="btn btn-primary">Registrar Voto</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 VotaFácil. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/poll-detail.js"></script>
+    <script>
+        // Manejar navbar
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.API.isAuthenticated()) {
+                window.location.href = '/pages/login.html';
+                return;
+            }
+
+            const guestElements = document.querySelectorAll('.guest-only');
+            const authElements = document.querySelectorAll('.auth-required');
+            guestElements.forEach(el => el.style.display = 'none');
+            authElements.forEach(el => el.style.display = 'block');
+        });
+
+        async function handleLogout() {
+            try {
+                await window.API.post('/auth/logout');
+            } catch (e) {}
+            window.API.logoutLocal();
+        }
+    </script>
+</body>
+</html>
