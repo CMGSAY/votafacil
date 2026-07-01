@@ -10,12 +10,15 @@ const app = express();
 // Configuracion de seguridad HTTP
 app.use(helmet());
 
-// Configuracion de CORS
-// NOTA: Para produccion (despliegue en Render y Vercel), la URL del frontend
-// estara en la variable de entorno FRONTEND_URL. Asegurarse de configurar
-// esta variable en el panel de control de Render apuntando al dominio de Vercel.
+// Configuracion de CORS actualizada con arreglo de origenes
+// Esto permite que el backend acepte peticiones tanto de tu entorno local
+// como directamente desde Vercel, solucionando el bloqueo.
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5500',
+    origin: [
+        'http://localhost:5500',
+        'https://votafacil-plum.vercel.app', 
+        process.env.FRONTEND_URL
+    ].filter(Boolean), // Esta pequeña función evita errores si la variable es nula
     credentials: true,
     optionsSuccessStatus: 200
 };
